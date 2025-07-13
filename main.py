@@ -183,63 +183,45 @@ def prepare_data(data, look_back=60):
 
     return X, y, scaler
 
-# --- LSTM Model Definition --- #
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.optimizers import Adam
 
-def build_lstm_model(input_shape):
+# --- LSTM Model Definition --- #
+
+def build_lstm_model(input_shape, lstm_units=50, dropout_rate=0.2, learning_rate=0.001):
     model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=input_shape))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=50, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=50))
-    model.add(Dropout(0.2))
+    # Layer 1
+    model.add(LSTM(units=lstm_units, return_sequences=True, input_shape=input_shape))
+    model.add(Dropout(dropout_rate))
+    # Layer 2
+    model.add(LSTM(units=lstm_units, return_sequences=True))
+    model.add(Dropout(dropout_rate))
+    # Layer 3
+    model.add(LSTM(units=lstm_units))
+    model.add(Dropout(dropout_rate))
+    # Output layer
     model.add(Dense(units=1)) # Output a single price prediction
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    print("LSTM model built.")
+
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss='mean_squared_error')
+    print("LSTM model built with units={}, dropout={}, learning_rate={}.".format(lstm_units, dropout_rate, learning_rate))
     return model
-
-# Placeholder for model training
-# model = build_lstm_model(input_shape=(timesteps, features))
-# model.fit(X_train, y_train, epochs=..., batch_size=...)
-
-
 
 
 
 # --- Model Training and Evaluation --- #
 
-def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
+def train_and_evaluate_model(model, X_train, y_train, X_test, y_test, epochs=10, batch_size=32):
     print("Training LSTM model...")
-    model.fit(X_train, y_train, epochs=10, batch_size=32, verbose=1) # Example epochs and batch_size
+    history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1, validation_data=(X_test, y_test))
     print("Model training complete.")
 
     print("Evaluating LSTM model...")
     loss = model.evaluate(X_test, y_test, verbose=0)
     print(f"Model evaluation loss: {loss:.4f}")
-    return model
-
-# Example usage (requires historical_data to be loaded and prepared)
-# For demonstration, we'll use the dummy historical data
-# In a real scenario, you would load actual historical data
-
-# Assuming historical_prices_dummy is available from data preparation section
-# X, y, scaler = prepare_data(historical_prices_dummy)
-
-# Split data into training and testing sets (simple split for demonstration)
-# train_size = int(len(X) * 0.8)
-# X_train, X_test = X[0:train_size,:], X[train_size:len(X),:]
-# y_train, y_test = y[0:train_size], y[train_size:len(y)]
-
-# model = build_lstm_model(input_shape=(X_train.shape[1], 1)) # input_shape should be (timesteps, 1)
-# trained_model = train_and_evaluate_model(model, X_train, y_train, X_test, y_test)
-
-
-# X_train, y_train, X_test, y_test = prepare_data(historical_data)
-# model = build_lstm_model(input_shape=(X_train.shape[1], X_train.shape[2]))
-# trained_model = train_and_evaluate_model(model, X_train, y_train, X_test, y_test)
+    return model, history
 
 if __name__ == "__main__":
     ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
