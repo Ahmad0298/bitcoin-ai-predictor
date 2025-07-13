@@ -1,10 +1,9 @@
 
+
 from binance.client import Client
 
 # --- Historical Data Fetching --- #
 
-# Replace with your actual API Key and Secret from Binance
-# For security, consider loading these from environment variables or a config file
 # IMPORTANT: Replace with your actual Binance API Key and Secret
 # For security, it is highly recommended to load these from environment variables
 # or a secure configuration management system, NOT hardcoded in the file.
@@ -13,12 +12,16 @@ API_SECRET = "YOUR_BINANCE_API_SECRET"
 
 def fetch_historical_klines(symbol, interval, start_str, end_str=None):
     client = Client(API_KEY, API_SECRET)
+    # Note: Binance REST API provides historical data down to 1-minute intervals.
+    # For true second-by-second prediction, you might need to explore alternative
+    # data sources or methods for higher frequency historical data if available.
+    # The WebSocket provides 1-second data in real-time, but historical 1-second
+    # data for long periods is not directly available via REST API.
     klines = client.get_historical_klines(symbol, interval, start_str, end_str)
     # Extract close prices from the klines
     historical_prices = [float(k[4]) for k in klines]
     print(f"Fetched {len(historical_prices)} historical klines.")
     return historical_prices
-
 
 import websocket
 import json
