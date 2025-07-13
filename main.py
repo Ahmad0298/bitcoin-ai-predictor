@@ -36,3 +36,8 @@ def on_message(ws, message):
 
 # This file will contain the core logic for data acquisition, model inference, and output.
 # Further development is required to implement the real-time prediction logic.
+
+
+if __name__ == "__main__":
+    ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
+    ws.run_forever()
