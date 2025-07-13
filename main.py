@@ -1,6 +1,8 @@
 
 
+
 from binance.client import Client
+import datetime
 
 # --- Historical Data Fetching --- #
 
@@ -12,14 +14,29 @@ API_SECRET = "YOUR_BINANCE_API_SECRET"
 
 def fetch_historical_klines(symbol, interval, start_str, end_str=None):
     client = Client(API_KEY, API_SECRET)
-    # Note: Binance REST API provides historical data down to 1-minute intervals.
-    # For true second-by-second prediction, you might need to explore alternative
-    # data sources or methods for higher frequency historical data if available.
-    # The WebSocket provides 1-second data in real-time, but historical 1-second
-    # data for long periods is not directly available via REST API.
-    klines = client.get_historical_klines(symbol, interval, start_str, end_str)
+    all_klines = []
+    # Binance API has a limit of 1000 klines per request. We need to loop to get more.
+    # For 1-minute interval, 1 year is 365 * 24 * 60 = 525600 klines. This requires many requests.
+    # For second-by-second prediction, historical 1-second data is not directly available via REST API.
+    # We will fetch 1-minute data and then potentially interpolate or use it for training.
+
+    start_ts = Client.get_timestamp(start_str)
+    end_ts = Client.get_timestamp(end_str) if end_str else int(datetime.datetime.now().timestamp() * 1000)
+
+    while True:
+        # Fetch klines in chunks
+        klines = client.get_historical_klines(symbol, interval, start_ts, end_ts, limit=1000)
+        if not klines:
+            break
+        all_klines.extend(klines)
+        # Set new start_ts to the timestamp of the last fetched kline + 1 millisecond
+        start_ts = klines[-1][0] + 1
+        # Break if we have fetched up to the end_ts
+        if start_ts > end_ts:
+            break
+
     # Extract close prices from the klines
-    historical_prices = [float(k[4]) for k in klines]
+    historical_prices = [float(k[4]) for k in all_klines]
     print(f"Fetched {len(historical_prices)} historical klines.")
     return historical_prices
 
