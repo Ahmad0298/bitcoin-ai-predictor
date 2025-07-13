@@ -40,23 +40,40 @@ price_scaler = None
 recent_prices = [] # To store the last 'look_back' prices for prediction
 LOOK_BACK = 60 # This should match the look_back used in prepare_data
 
+
 def load_and_train_model():
     global trained_model, price_scaler
     print("Loading/Training model...")
-    # In a real scenario, you would load historical data, prepare it,
-    # train the model, and save the scaler.
-    # For demonstration, we'll use dummy data to get a scaler and a dummy model.
+    # Fetch historical data (e.g., 1 year of daily data for initial training)
+    # You might need to adjust the interval and start_str based on your needs
+    # For real-time prediction, 1-minute or 5-minute intervals might be more suitable
+    # for training, and then predicting 1-second changes.
+    try:
+        historical_prices = fetch_historical_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1MINUTE, start_str='1 Jan, 2024')
+        if not historical_prices:
+            print("No historical data fetched. Using dummy data for now.")
+            historical_prices = [i for i in range(100, 200)] # Fallback to dummy
+    except Exception as e:
+        print(f"Error fetching historical data: {e}. Using dummy data for now.")
+        historical_prices = [i for i in range(100, 200)] # Fallback to dummy
 
-    # Simulate historical data for scaler
-    historical_prices_for_scaler = [i for i in range(10000, 70000, 100)] # Example range
-    _, _, price_scaler = prepare_data(historical_prices_for_scaler, look_back=LOOK_BACK)
+    # Now, use this historical_prices for data preparation and model training
+    X, y, price_scaler = prepare_data(historical_prices, look_back=LOOK_BACK)
 
-    # Build a dummy model for now. Replace with actual trained model loading.
-    trained_model = build_lstm_model(input_shape=(LOOK_BACK, 1))
-    # You would typically load a saved model here:
-    # from tensorflow.keras.models import load_model
-    # trained_model = load_model('path/to/your/saved_model.h5')
+    # Split data into training and testing sets
+    train_size = int(len(X) * 0.8)
+    X_train, X_test = X[0:train_size,:], X[train_size:len(X),:]
+    y_train, y_test = y[0:train_size], y[train_size:len(y)]
+
+    # Build and train the model
+    model = build_lstm_model(input_shape=(X_train.shape[1], 1))
+    trained_model = train_and_evaluate_model(model, X_train, y_train, X_test, y_test)
+
+    # Save the trained model (optional, but recommended for persistence)
+    trained_model.save('bitcoin_lstm_model.h5')
+    print("Trained model saved as bitcoin_lstm_model.h5")
     print("Model and scaler initialized.")
+
 
 
 def on_message(ws, message):
@@ -146,7 +163,7 @@ def prepare_data(data, look_back=60):
 # historical_prices = [float(k[4]) for k in klines] # Close prices
 
 # For now, let's use a dummy historical data for testing the structure
-historical_prices_dummy = [i for i in range(100, 200)] # Simulate 100 data points
+
 
 
 # In a real scenario, you would download historical BTC price data
