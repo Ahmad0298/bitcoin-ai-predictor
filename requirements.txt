@@ -1,0 +1,3 @@
+
+# Initial requirements for Bitcoin AI Predictor
+# Add more as needed (e.g., pandas, numpy, scikit-learn, tensorflow, pytorch, websocket-client)
