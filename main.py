@@ -24,6 +24,19 @@ def on_message(ws, message):
 
         if is_candle_closed:
             print(f"Current BTC Price: {close_price}")
+
+            # Placeholder for actual prediction logic
+            # You would typically feed a sequence of recent prices to your trained LSTM model
+            # and get a prediction for the next second.
+            # For demonstration, let's simulate a prediction.
+            predicted_price = close_price * (1 + (0.0001 * (2 * (0.5 - (time.time() % 1))))) # Simple fluctuating prediction
+            
+            print(f"Predicted Next BTC Price: {predicted_price:.2f}")
+            if predicted_price > close_price:
+                print("Trend: UP")
+            else:
+                print("Trend: DOWN")
+
             # Here we will integrate the LSTM model for prediction
             # For now, just printing the price
 
