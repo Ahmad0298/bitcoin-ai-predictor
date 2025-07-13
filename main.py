@@ -58,6 +58,30 @@ def prepare_data(historical_data):
 # For demonstration, we'll assume `historical_data` is available.
 # historical_data = load_historical_data()
 
+
+
+# --- LSTM Model Definition --- #
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+
+def build_lstm_model(input_shape):
+    model = Sequential()
+    model.add(LSTM(units=50, return_sequences=True, input_shape=input_shape))
+    model.add(Dropout(0.2))
+    model.add(LSTM(units=50, return_sequences=True))
+    model.add(Dropout(0.2))
+    model.add(LSTM(units=50))
+    model.add(Dropout(0.2))
+    model.add(Dense(units=1)) # Output a single price prediction
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    print("LSTM model built.")
+    return model
+
+# Placeholder for model training
+# model = build_lstm_model(input_shape=(timesteps, features))
+# model.fit(X_train, y_train, epochs=..., batch_size=...)
+
 if __name__ == "__main__":
     ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
     ws.run_forever()
