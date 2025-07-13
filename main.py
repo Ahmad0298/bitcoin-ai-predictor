@@ -157,12 +157,19 @@ def on_message(ws, message):
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
+
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+
 # --- Data Preparation for LSTM --- #
 
 def prepare_data(data, look_back=60):
     # data: a list or numpy array of historical prices
+    # Ensure data is a numpy array and reshaped for MinMaxScaler
+    data_array = np.array(data).reshape(-1, 1)
+
     scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_data = scaler.fit_transform(np.array(data).reshape(-1, 1))
+    scaled_data = scaler.fit_transform(data_array)
 
     X = []
     y = []
@@ -171,30 +178,10 @@ def prepare_data(data, look_back=60):
         y.append(scaled_data[i, 0])
 
     X, y = np.array(X), np.array(y)
+    # Reshape X for LSTM input [samples, timesteps, features]
     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
     return X, y, scaler
-
-# Placeholder for historical data loading
-# In a real scenario, you would fetch historical data from an API.
-# For now, let's simulate some historical data for demonstration.
-# This should be replaced with actual data fetching.
-# For example, using python-binance library to get historical klines
-# from binance.client import Client
-# client = Client(api_key, api_secret)
-# klines = client.get_historical_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1MINUTE, start_str='1 Jan, 2023')
-# historical_prices = [float(k[4]) for k in klines] # Close prices
-
-# For now, let's use a dummy historical data for testing the structure
-
-
-
-# In a real scenario, you would download historical BTC price data
-# from an exchange API (e.g., Binance historical klines) or load from a file.
-# For demonstration, we'll assume `historical_data` is available.
-# historical_data = load_historical_data()
-
-
 
 # --- LSTM Model Definition --- #
 
