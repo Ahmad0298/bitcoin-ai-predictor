@@ -38,6 +38,26 @@ def on_message(ws, message):
 # Further development is required to implement the real-time prediction logic.
 
 
+
+
+# --- Data Preparation for LSTM --- #
+
+def prepare_data(historical_data):
+    # This function will preprocess historical data for LSTM training.
+    # It will involve:
+    # 1. Normalization/Scaling
+    # 2. Creating sequences (e.g., look-back periods)
+    # 3. Splitting into training and testing sets
+    print("Preparing historical data...")
+    # Placeholder for actual data preparation logic
+    return historical_data # For now, just return as is
+
+# Placeholder for historical data download/loading
+# In a real scenario, you would download historical BTC price data
+# from an exchange API (e.g., Binance historical klines) or load from a file.
+# For demonstration, we'll assume `historical_data` is available.
+# historical_data = load_historical_data()
+
 if __name__ == "__main__":
     ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
     ws.run_forever()
