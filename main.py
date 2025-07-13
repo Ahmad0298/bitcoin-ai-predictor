@@ -12,11 +12,44 @@ def on_open(ws):
 def on_close(ws):
     print("Closed connection")
 
-def on_message(ws, message):
-    json_message = json.loads(message)
-    # print(json_message)
 
-    # Extract relevant data (e.g., close price)
+
+# --- Real-time Prediction Integration --- #
+
+# Global variables to store the trained model and scaler
+trained_model = None
+price_scaler = None
+recent_prices = [] # To store the last 'look_back' prices for prediction
+LOOK_BACK = 60 # This should match the look_back used in prepare_data
+
+def load_and_train_model():
+    global trained_model, price_scaler
+    print("Loading/Training model...")
+    # In a real scenario, you would load historical data, prepare it,
+    # train the model, and save the scaler.
+    # For demonstration, we'll use dummy data to get a scaler and a dummy model.
+
+    # Simulate historical data for scaler
+    historical_prices_for_scaler = [i for i in range(10000, 70000, 100)] # Example range
+    _, _, price_scaler = prepare_data(historical_prices_for_scaler, look_back=LOOK_BACK)
+
+    # Build a dummy model for now. Replace with actual trained model loading.
+    trained_model = build_lstm_model(input_shape=(LOOK_BACK, 1))
+    # You would typically load a saved model here:
+    # from tensorflow.keras.models import load_model
+    # trained_model = load_model('path/to/your/saved_model.h5')
+    print("Model and scaler initialized.")
+
+
+def on_message(ws, message):
+    global trained_model, price_scaler, recent_prices
+
+    if trained_model is None or price_scaler is None:
+        print("Model or scaler not initialized. Skipping prediction.")
+        return
+
+    json_message = json.loads(message)
+
     if 'k' in json_message and 'c' in json_message['k']:
         candle = json_message['k']
         is_candle_closed = candle['x']
@@ -25,20 +58,29 @@ def on_message(ws, message):
         if is_candle_closed:
             print(f"Current BTC Price: {close_price}")
 
-            # Placeholder for actual prediction logic
-            # You would typically feed a sequence of recent prices to your trained LSTM model
-            # and get a prediction for the next second.
-            # For demonstration, let's simulate a prediction.
-            predicted_price = close_price * (1 + (0.0001 * (2 * (0.5 - (time.time() % 1))))) # Simple fluctuating prediction
-            
-            print(f"Predicted Next BTC Price: {predicted_price:.2f}")
-            if predicted_price > close_price:
-                print("Trend: UP")
-            else:
-                print("Trend: DOWN")
+            # Add current price to recent_prices and maintain LOOK_BACK size
+            recent_prices.append(close_price)
+            if len(recent_prices) > LOOK_BACK:
+                recent_prices.pop(0)
 
-            # Here we will integrate the LSTM model for prediction
-            # For now, just printing the price
+            if len(recent_prices) == LOOK_BACK:
+                # Prepare data for prediction
+                last_60_prices = np.array(recent_prices).reshape(-1, 1)
+                scaled_last_60_prices = price_scaler.transform(last_60_prices)
+                X_predict = np.array([scaled_last_60_prices])
+                X_predict = np.reshape(X_predict, (X_predict.shape[0], X_predict.shape[1], 1))
+
+                # Make prediction
+                predicted_scaled_price = trained_model.predict(X_predict)[0][0]
+                predicted_price = price_scaler.inverse_transform([[predicted_scaled_price]])[0][0]
+
+                print(f"Predicted Next BTC Price: {predicted_price:.2f}")
+                if predicted_price > close_price:
+                    print("Trend: UP")
+                else:
+                    print("Trend: DOWN")
+            else:
+                print(f"Collecting historical data... ({len(recent_prices)}/{LOOK_BACK})")
 
 # This part will be integrated into the main application loop
 # ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
@@ -156,4 +198,5 @@ def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
 
 if __name__ == "__main__":
     ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
-    ws.run_forever()
+        load_and_train_model()
+ws.run_forever()
