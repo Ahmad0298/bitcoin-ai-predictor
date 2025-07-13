@@ -5,6 +5,9 @@ from binance.client import Client
 
 # Replace with your actual API Key and Secret from Binance
 # For security, consider loading these from environment variables or a config file
+# IMPORTANT: Replace with your actual Binance API Key and Secret
+# For security, it is highly recommended to load these from environment variables
+# or a secure configuration management system, NOT hardcoded in the file.
 API_KEY = "YOUR_BINANCE_API_KEY"
 API_SECRET = "YOUR_BINANCE_API_SECRET"
 
