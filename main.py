@@ -120,17 +120,36 @@ def build_lstm_model(input_shape):
 
 
 
+
+
 # --- Model Training and Evaluation --- #
 
 def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
-    print("Training and evaluating LSTM model...")
-    # Placeholder for actual training and evaluation logic
-    # model.fit(X_train, y_train, epochs=..., batch_size=...)
-    # evaluation_results = model.evaluate(X_test, y_test)
-    # print(f"Model evaluation results: {evaluation_results}")
+    print("Training LSTM model...")
+    model.fit(X_train, y_train, epochs=10, batch_size=32, verbose=1) # Example epochs and batch_size
+    print("Model training complete.")
+
+    print("Evaluating LSTM model...")
+    loss = model.evaluate(X_test, y_test, verbose=0)
+    print(f"Model evaluation loss: {loss:.4f}")
     return model
 
 # Example usage (requires historical_data to be loaded and prepared)
+# For demonstration, we'll use the dummy historical data
+# In a real scenario, you would load actual historical data
+
+# Assuming historical_prices_dummy is available from data preparation section
+# X, y, scaler = prepare_data(historical_prices_dummy)
+
+# Split data into training and testing sets (simple split for demonstration)
+# train_size = int(len(X) * 0.8)
+# X_train, X_test = X[0:train_size,:], X[train_size:len(X),:]
+# y_train, y_test = y[0:train_size], y[train_size:len(y)]
+
+# model = build_lstm_model(input_shape=(X_train.shape[1], 1)) # input_shape should be (timesteps, 1)
+# trained_model = train_and_evaluate_model(model, X_train, y_train, X_test, y_test)
+
+
 # X_train, y_train, X_test, y_test = prepare_data(historical_data)
 # model = build_lstm_model(input_shape=(X_train.shape[1], X_train.shape[2]))
 # trained_model = train_and_evaluate_model(model, X_train, y_train, X_test, y_test)
